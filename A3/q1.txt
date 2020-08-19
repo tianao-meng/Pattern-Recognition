@@ -1,0 +1,255 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import svm
+
+
+def load_dataset(dataset_num):
+    if dataset_num == 1:
+        text = np.loadtxt("/Users/mengtianao/Documents/SYDE675/a3/hw3_dataset1.csv", dtype=np.str, delimiter=",", encoding='utf-8-sig')
+    else:
+        text = np.loadtxt("/Users/mengtianao/Documents/SYDE675/a3/hw3_dataset2.csv", dtype=np.str, delimiter=",", encoding='utf-8-sig')
+    print("text: ", text)
+    attribute1 = text[:, 0].astype(np.float)
+    attribute2 = text[:, 1].astype(np.float)
+    number_sample = len(attribute1)
+    attribute = []
+    for i in range(number_sample):
+        temp = []
+        temp.append(attribute1[i])
+        temp.append(attribute2[i])
+
+        attribute.append(temp)
+        #print("attribute: ", attribute)
+    #print("attribute: ", attribute)
+
+    label = text[:,2].astype(np.float)
+    #print("label: ", label)
+
+    return attribute, label
+
+def seperate_data(attribute, label):
+
+    attribute_0 = []
+    attribute_1 = []
+    count = 0
+    for i in label:
+        if i == 0:
+            attribute_0.append(attribute[count])
+        else:
+            attribute_1.append(attribute[count])
+
+        count += 1
+
+    return attribute_0, attribute_1
+
+def normal(feature):
+    sum_x = 0
+    sum_y = 0
+    count = 0
+    sample_max = np.max(feature, axis=0)
+    for sample in feature:
+        sum_x += sample[0]
+        sum_y += sample[1]
+        count += 1
+
+    mean_x = sum_x / count
+    mean_y = sum_y / count
+
+    for sample in feature:
+        sample[0] = (sample[0] - mean_x) / sample_max[0]
+        sample[1] = (sample[1] - mean_y) / sample_max[1]
+    return feature
+def plot_decision_boundary(dataset_attribute, dataset_label, c):
+
+
+    clf = svm.SVC(C = c, kernel = 'linear')
+    #clf = svm.LinearSVC(C=c, loss = 'hinge', max_iter = 10000)
+    clf.fit(dataset_attribute, dataset_label)
+    #print("clf.support_vectors_", clf.support_vectors_)
+
+    dataset_w = clf.coef_[0]
+    dataset_a = -dataset_w[0] / dataset_w[1]
+    dataset_xx = []
+
+    if(dataset_attribute == dataset1_attribute):
+        dataset_xx = np.linspace(0, 4)
+
+
+    if(dataset_attribute == dataset2_attribute):
+        dataset_xx = np.linspace(-1, 1)
+
+    dataset_yy = dataset_a * dataset_xx - (clf.intercept_[0]) / dataset_w[1]
+    margin = 1 / np.sqrt(np.sum(clf.coef_ ** 2))
+    yy_down = dataset_yy - np.sqrt(1 + dataset_a ** 2) * margin
+    yy_up = dataset_yy + np.sqrt(1 + dataset_a ** 2) * margin
+
+
+    if (c == 0.001):
+        plt.plot(dataset_xx, dataset_yy, 'k-', label = 'C = 0.001', c = 'r')
+        plt.plot(dataset_xx, yy_down, 'k--', label='C = 0.001', c='r')
+        plt.plot(dataset_xx, yy_up, 'k--', label='C = 0.001', c='r')
+        #print("clf.support_ ", clf.support_vectors_)
+
+    if (c == 0.01):
+        plt.plot(dataset_xx, dataset_yy, 'k-', label = 'C = 0.01', c = 'y')
+        plt.plot(dataset_xx, yy_down, 'k--', label='C = 0.01', c='r')
+        plt.plot(dataset_xx, yy_up, 'k--', label='C = 0.01', c='r')
+
+    if (c == 0.1):
+        plt.plot(dataset_xx, dataset_yy, 'k-', label = 'C = 0.1', c = 'b')
+        plt.plot(dataset_xx, yy_down, 'k--', label='C = 0.1', c='r')
+        plt.plot(dataset_xx, yy_up, 'k--', label='C = 0.1', c='r')
+
+    if (c == 1):
+        plt.plot(dataset_xx, dataset_yy, 'k-', label = 'C = 1', c = 'g')
+        plt.plot(dataset_xx, yy_down, 'k--', label='C = 1', c='r')
+        plt.plot(dataset_xx, yy_up, 'k--', label='C = 1', c='r')
+
+    #res = clf.predict([[100,1]])
+    #print("res: ", res)
+
+    error_rate = error_rate_cal(dataset_attribute, dataset_label, clf)
+    return error_rate
+
+def error_rate_cal (dataset_attribute, dataset_label, clf):
+
+    error_num = 0
+    for i in range(len(dataset_attribute)):
+        if clf.predict([dataset_attribute[i]]) != [dataset_label[i]]:
+
+            error_num += 1
+
+    return error_num/ len(dataset_attribute)
+"""
+    dataset1_b = clf_1.support_vectors_[0]
+    dataset1_yy_down = dataset1_a * dataset1_xx + (dataset1_b[1] - dataset1_a * dataset1_b[0])
+    dataset1_b = clf_1.support_vectors_[-1]
+    dataset1_yy_up = dataset1_a * dataset1_xx + (dataset1_b[1] - dataset1_a * dataset1_b[0])
+
+    
+    plt.plot(dataset1_xx, dataset1_yy_down, 'k--')
+    plt.plot(dataset1_xx, dataset1_yy_up, 'k--')
+"""
+
+
+
+
+
+if __name__ == "__main__":
+    dataset1_attribute, dataset1_label = load_dataset(1)
+    dataset2_attribute, dataset2_label = load_dataset(2)
+
+    dataset1_attribute_0, dataset1_attribute_1 = seperate_data(dataset1_attribute, dataset1_label)
+    dataset2_attribute_0, dataset2_attribute_1 = seperate_data(dataset2_attribute, dataset2_label)
+
+    dataset1_attribute_0 = np.array(dataset1_attribute_0)
+    dataset1_attribute_1 = np.array(dataset1_attribute_1)
+    dataset2_attribute_0 = np.array(dataset2_attribute_0)
+    dataset2_attribute_1 = np.array(dataset2_attribute_1)
+
+    plt.figure(1)
+
+    plt.title('hw3_dataset1')
+    plt.scatter(dataset1_attribute_0[:,0], dataset1_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset1_attribute_1[:,0], dataset1_attribute_1[:,1],c = 'y', alpha=0.6)
+
+    plt.figure(2)
+    plt.title('hw3_dataset2')
+    plt.scatter(dataset2_attribute_0[:,0], dataset2_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset2_attribute_1[:,0], dataset2_attribute_1[:,1],c = 'y', alpha=0.6)
+
+    plt.figure(3)
+
+    plt.title('hw3_dataset1 c = 0.001')
+    plt.scatter(dataset1_attribute_0[:,0], dataset1_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset1_attribute_1[:,0], dataset1_attribute_1[:,1],c = 'y', alpha=0.6)
+
+    dataset1_error_1 = plot_decision_boundary(dataset1_attribute, dataset1_label, 0.001)
+
+    plt.figure(4)
+
+    plt.title('hw3_dataset1 c = 0.01')
+    plt.scatter(dataset1_attribute_0[:,0], dataset1_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset1_attribute_1[:,0], dataset1_attribute_1[:,1],c = 'y', alpha=0.6)
+
+    dataset1_error_2 = plot_decision_boundary(dataset1_attribute, dataset1_label, 0.01)
+
+    plt.figure(5)
+
+    plt.title('hw3_dataset1 c = 0.1')
+    plt.scatter(dataset1_attribute_0[:,0], dataset1_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset1_attribute_1[:,0], dataset1_attribute_1[:,1],c = 'y', alpha=0.6)
+
+    dataset1_error_3 = plot_decision_boundary(dataset1_attribute, dataset1_label, 0.1)
+
+    plt.figure(6)
+
+    plt.title('hw3_dataset1 c = 1')
+    plt.scatter(dataset1_attribute_0[:,0], dataset1_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset1_attribute_1[:,0], dataset1_attribute_1[:,1],c = 'y', alpha=0.6)
+
+    dataset1_error_4 = plot_decision_boundary(dataset1_attribute, dataset1_label, 1)
+
+    print("error rate for C = 0.001 in dataset1: ", dataset1_error_1)
+    print("error rate for C = 0.01  in dataset1: ", dataset1_error_2)
+    print("error rate for C = 0.1   in dataset1: ", dataset1_error_3)
+    print("error rate for C = 1     in dataset1: ", dataset1_error_4)
+
+
+
+
+
+    plt.figure(7)
+
+    plt.title('hw3_dataset2 c = 0.001')
+    plt.scatter(dataset2_attribute_0[:,0], dataset2_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset2_attribute_1[:,0], dataset2_attribute_1[:,1],c = 'y', alpha=0.6)
+
+    dataset2_error_1 = plot_decision_boundary(dataset2_attribute, dataset2_label, 0.001)
+    plt.figure(8)
+
+    plt.title('hw3_dataset2 c = 0.01')
+    plt.scatter(dataset2_attribute_0[:,0], dataset2_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset2_attribute_1[:,0], dataset2_attribute_1[:,1],c = 'y', alpha=0.6)
+    dataset2_error_2 = plot_decision_boundary(dataset2_attribute, dataset2_label, 0.01)
+
+    plt.figure(9)
+
+    plt.title('hw3_dataset2 c = 0.1')
+    plt.scatter(dataset2_attribute_0[:,0], dataset2_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset2_attribute_1[:,0], dataset2_attribute_1[:,1],c = 'y', alpha=0.6)
+    dataset2_error_3 = plot_decision_boundary(dataset2_attribute, dataset2_label, 0.1)
+
+    plt.figure(10)
+
+    plt.title('hw3_dataset2 c = 1')
+    plt.scatter(dataset2_attribute_0[:,0], dataset2_attribute_0[:,1],c = 'r', alpha=0.6)
+    plt.scatter(dataset2_attribute_1[:,0], dataset2_attribute_1[:,1],c = 'y', alpha=0.6)
+    dataset2_error_4 = plot_decision_boundary(dataset2_attribute, dataset2_label, 1)
+
+
+    print("error rate for C = 0.001 in dataset2: ", dataset2_error_1)
+    print("error rate for C = 0.01  in dataset2: ", dataset2_error_2)
+    print("error rate for C = 0.1   in dataset2: ", dataset2_error_3)
+    print("error rate for C = 1     in dataset2: ", dataset2_error_4)
+
+
+
+
+    plt.show()
+
+
+
+
+    """
+    dataset1_attribute_array = np.array(dataset1_attribute)
+    dataset2_attribute_array = np.array(dataset2_attribute)
+
+    dataset1_x_min, dataset1_x_max = dataset1_attribute_array[:, 0].min() - 1,  dataset1_attribute_array[:, 0].max() + 1
+    dataset1_y_min, dataset1_y_max = dataset1_attribute_array[:, 1].min() - 1,  dataset1_attribute_array[:, 1].max() + 1
+
+    dataset1_xx, dataset1_yy = np.meshgrid(np.arange(dataset1_x_min, dataset1_x_max, 0.02),
+                                            np.arange(dataset1_y_min, dataset1_y_max, 0.02))
+
+    dataset1_Z = clf_1.predict(np.c_[dataset1_xx.ravel(), dataset1_yy.ravel()])
+    """
